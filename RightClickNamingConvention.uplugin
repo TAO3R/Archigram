@@ -12,12 +12,27 @@
 	"SupportURL": "",
 	"CanContainContent": true,
 	"IsBetaVersion": false,
-	"IsExperimentalVersion": false,
+	"IsExperimentalVersion": true,
 	"Installed": false,
 	"Modules": [
 		{
 			"Name": "RightClickNamingConvention",
 			"Type": "Editor",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "Archigram",
+			"Type": "Editor",
+      "LoadingPhase": "Default"
+		},
+		{
+			"Name": "ArchigramEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
+		},
+		{
+			"Name": "ArchigramRuntime",
+			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
 	]

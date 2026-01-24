@@ -37,7 +37,7 @@ void FRightClickNamingConventionModule::ShutdownModule()
 
 void FRightClickNamingConventionModule::RegisterMenus()
 {
-	UToolMenus* ToolMenus = UToolMenus::Get();	// store a pointer to the UToolMenu instance
+	UToolMenus* ToolMenus = UToolMenus::Get();	// store a pointer to the UToolMenus instance
 	if (!ToolMenus)
 	{
 		return;

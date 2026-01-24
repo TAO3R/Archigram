@@ -1,40 +1,45 @@
-# --- Compiled Binaries (Never commit these) ---
+# --- Unreal Engine Core (CRITICAL) ---
 Binaries/
 DerivedDataCache/
 Intermediate/
 Saved/
 
-# --- Specific File Types ---
+# --- Compiled Files ---
 *.obj
 *.pdb
 *.dll
-*.exe
 *.lib
+*.exe
 *.exp
 *.app
 *.dylib
 
-# --- Generated Unreal Files ---
+# --- Generated Source Files ---
 *.generated.h
 *.gen.cpp
 
-# --- Visual Studio & IDEs ---
+# --- Visual Studio ---
 .vs/
 *.sln
-*.vcxproj
-*.vcxproj.filters
-*.vcxproj.user
 *.suo
 *.opensdf
 *.sdf
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# --- Rider / JetBrains (NEW) ---
+# The main Rider configuration folder
 .idea/
-.vscode/
+# User-specific settings (like window layout/colors)
+*.sln.DotSettings.user
+# (Optional) Ignore shared settings if you don't want to enforce code style on others
+# *.sln.DotSettings
 
-# --- Mac/Linux specific ---
-.DS_Store
-*.orig
-
-# --- Plugin Template Files ---
-# If you use templates for build scripts
-*.Template.cs
+# --- Plugin Specific ---
 *.uplugin.Template
+*.Template.cs
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
