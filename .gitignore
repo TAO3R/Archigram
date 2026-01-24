@@ -1,0 +1,40 @@
+# --- Compiled Binaries (Never commit these) ---
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# --- Specific File Types ---
+*.obj
+*.pdb
+*.dll
+*.exe
+*.lib
+*.exp
+*.app
+*.dylib
+
+# --- Generated Unreal Files ---
+*.generated.h
+*.gen.cpp
+
+# --- Visual Studio & IDEs ---
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.suo
+*.opensdf
+*.sdf
+.idea/
+.vscode/
+
+# --- Mac/Linux specific ---
+.DS_Store
+*.orig
+
+# --- Plugin Template Files ---
+# If you use templates for build scripts
+*.Template.cs
+*.uplugin.Template
