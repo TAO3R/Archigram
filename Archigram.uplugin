@@ -2,10 +2,10 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "RightClickNamingConvention",
-	"Description": "Right-click menu button that adds industry-standard naming convention to assets",
+	"FriendlyName": "Archigram",
+	"Description": "Archigram plugin for Unreal Engine",
 	"Category": "Other",
-	"CreatedBy": "Kagura Remon",
+	"CreatedBy": "Archigram",
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
@@ -23,7 +23,7 @@
 		{
 			"Name": "Archigram",
 			"Type": "Editor",
-      "LoadingPhase": "Default"
+			"LoadingPhase": "Default"
 		},
 		{
 			"Name": "ArchigramEditor",
