@@ -36,6 +36,10 @@ public class Archigram : ModuleRules
 				"Slate",
 				"SlateCore",
 				"UnrealEd",
+				"ToolMenus",		// For extending editor menus
+				"LevelEditor",		// For main menu bar access
+				"Projects",			// For getting plugin paths (icons)
+				"EditorStyle",		// For editor styling
 				// ... add private dependencies that you statically link with here ...
 			}
 		);
