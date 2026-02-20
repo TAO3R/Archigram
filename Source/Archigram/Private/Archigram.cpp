@@ -189,6 +189,14 @@ void FArchigramModule::ExecuteToolbarAction()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, TEXT("Archigram Toolbar Button Clicked!"));
 	}
+
+	// TODO: add the HDA actor to the level's origin (or a user specified position)
+	
+}
+
+void FArchigramModule::SetHDAMeshCollisionTypeToDefault(const FName& PackageName, EPackageFlags PackageFlags, const FString& PackageFileName, const FString& AssetPackageName)
+{
+	
 }
 
 void FArchigramModule::ExecutePipelineTestLog()

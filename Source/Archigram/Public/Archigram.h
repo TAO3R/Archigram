@@ -33,4 +33,7 @@ private:
 
 	/** Custom style set for icons */
 	TSharedPtr<FSlateStyleSet> StyleSet;
+
+	/** Set the collision type of the HDA actor's mesh component to `default` everytime the actor get cooked in the scene */
+	static void SetHDAMeshCollisionTypeToDefault(const FName& PackageName, EPackageFlags PackageFlags, const FString& PackageFileName, const FString& AssetPackageName);
 };
