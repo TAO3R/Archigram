@@ -4,11 +4,31 @@
 #include "ToolMenus.h"
 #include "Styling/SlateStyleRegistry.h"
 #include "Interfaces/IPluginManager.h"
+#include "Editor.h"
+#include "Engine/World.h"
+#include "GameFramework/Actor.h"
+#include "UObject/ConstructorHelpers.h"
+
+
 
 #define LOCTEXT_NAMESPACE "FArchigramModule"
 
+#pragma region Variables
+
 // Style set name - used to reference our custom icons
 const FName ArchigramStyleSetName = TEXT("ArchigramStyle");
+
+// Path to the BP_PCG Blueprint actor (adjust if your path is different)
+const TCHAR* FArchigramModule::PCGActorBlueprintPath = TEXT("/Archigram/Blueprints/BP_PCG.BP_PCG_C");
+
+// Static member to track the spawned PCG actor
+// TWeakObjectPtr automatically becomes invalid when the actor is deleted/garbage collected
+TWeakObjectPtr<AActor> FArchigramModule::SpawnedPCGActor = nullptr;
+
+#pragma endregion
+
+
+#pragma region Functions
 
 void FArchigramModule::StartupModule()
 {
@@ -178,20 +198,132 @@ void FArchigramModule::RegisterToolbarButton()
 
 void FArchigramModule::ExecuteToolbarAction()
 {
-	// Output to the Output Log
 	UE_LOG(LogTemp, Warning, TEXT("***********************************************"));
 	UE_LOG(LogTemp, Warning, TEXT("*  Archigram Toolbar Button Clicked!          *"));
-	UE_LOG(LogTemp, Warning, TEXT("*  This is the toolbar action output.         *"));
 	UE_LOG(LogTemp, Warning, TEXT("***********************************************"));
 
-	// Display on screen
-	if (GEngine)
+	// Check if a PCG actor already exists
+	if (HasSpawnedPCGActor())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, TEXT("Archigram Toolbar Button Clicked!"));
+		AActor* ExistingActor = GetSpawnedPCGActor();
+		UE_LOG(LogTemp, Warning, TEXT("Archigram: PCG Actor already exists in level: %s"), 
+			ExistingActor ? *ExistingActor->GetName() : TEXT("Unknown"));
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, 
+				TEXT("Archigram: PCG Actor already exists! Delete it first to spawn a new one."));
+		}
+
+		// Optionally select the existing actor
+		if (GEditor && ExistingActor)
+		{
+			GEditor->SelectNone(false, true);
+			GEditor->SelectActor(ExistingActor, true, true);
+		}
+		return;
 	}
 
-	// TODO: add the HDA actor to the level's origin (or a user specified position)
+	// Spawn the PCG actor at origin
+	UE_LOG(LogTemp, Warning, TEXT("*  Spawning BP_PCG Actor at origin...         *"));
+	AActor* NewActor = SpawnPCGActor(FVector::ZeroVector);
+
+	// Display result on screen
+	if (GEngine)
+	{
+		if (NewActor)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, 
+				FString::Printf(TEXT("Archigram: Spawned %s at origin"), *NewActor->GetName()));
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, 
+				TEXT("Archigram: Failed to spawn PCG Actor"));
+		}
+	}
+}
+
+AActor* FArchigramModule::SpawnPCGActor(FVector Location)
+{
+	// Check if actor already exists
+	if (HasSpawnedPCGActor())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Archigram: PCG Actor already exists, not spawning another"));
+		return GetSpawnedPCGActor();
+	}
+
+	// Get the editor world
+	UWorld* World = nullptr;
 	
+	if (GEditor)
+	{
+		World = GEditor->GetEditorWorldContext().World();
+	}
+
+	if (!World)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Archigram: Cannot spawn actor - no valid world found"));
+		return nullptr;
+	}
+
+	// Load the Blueprint class
+	UClass* PCGActorClass = LoadClass<AActor>(nullptr, PCGActorBlueprintPath);
+	
+	if (!PCGActorClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Archigram: Failed to load Blueprint class at path: %s"), PCGActorBlueprintPath);
+		return nullptr;
+	}
+
+	// Set up spawn parameters
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	// Spawn the actor
+	AActor* NewActor = World->SpawnActor<AActor>(PCGActorClass, Location, FRotator::ZeroRotator, SpawnParams);
+
+	if (NewActor)
+	{
+		// Store the weak reference to track this actor
+		SpawnedPCGActor = NewActor;
+
+		UE_LOG(LogTemp, Log, TEXT("Archigram: Successfully spawned %s at location (%f, %f, %f)"), 
+			*NewActor->GetName(), Location.X, Location.Y, Location.Z);
+		
+		// Select the newly spawned actor in the editor
+		if (GEditor)
+		{
+			GEditor->SelectNone(false, true);
+			GEditor->SelectActor(NewActor, true, true);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Archigram: SpawnActor returned nullptr"));
+	}
+
+	return NewActor;
+}
+
+AActor* FArchigramModule::GetSpawnedPCGActor()
+{
+	// TWeakObjectPtr::Get() returns nullptr if the object has been destroyed
+	return SpawnedPCGActor.Get();
+}
+
+bool FArchigramModule::HasSpawnedPCGActor()
+{
+	// TWeakObjectPtr::IsValid() returns false if:
+	// - The pointer was never set (nullptr)
+	// - The referenced object has been destroyed/garbage collected
+	return SpawnedPCGActor.IsValid();
+}
+
+void FArchigramModule::ClearSpawnedPCGActorReference()
+{
+	SpawnedPCGActor.Reset();
+	UE_LOG(LogTemp, Log, TEXT("Archigram: Cleared PCG Actor reference"));
 }
 
 void FArchigramModule::SetHDAMeshCollisionTypeToDefault(const FName& PackageName, EPackageFlags PackageFlags, const FString& PackageFileName, const FString& AssetPackageName)
@@ -214,6 +346,10 @@ void FArchigramModule::ExecutePipelineTestLog()
 	}
 
 }	// end of excutePipelineTestLog
+
+#pragma endregion
+
+
 
 #undef LOCTEXT_NAMESPACE
 
