@@ -69,6 +69,18 @@ private:
 	 */
 	static TWeakObjectPtr<AActor> SpawnedPCGActor;
 
+	/** 
+	 * Called when a map/level is opened in the editor.
+	 * Clears current reference and searches for existing PCG actor in the new level.
+	 */
+	void OnMapOpened(const FString& Filename, bool bAsTemplate);
+
+	/**
+	 * Searches the current level for an existing PCG actor (BP_PCG) and updates the reference.
+	 * @return The found actor, or nullptr if none exists
+	 */
+	static AActor* FindExistingPCGActorInLevel();
+
 	/** Set the collision type of the HDA actor's mesh component to `default` everytime the actor get cooked in the scene */
 	static void SetHDAMeshCollisionTypeToDefault(const FName& PackageName, EPackageFlags PackageFlags, const FString& PackageFileName, const FString& AssetPackageName);
 };

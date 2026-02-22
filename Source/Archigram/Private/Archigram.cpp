@@ -5,9 +5,12 @@
 #include "Styling/SlateStyleRegistry.h"
 #include "Interfaces/IPluginManager.h"
 #include "Editor.h"
+#include "Editor/EditorEngine.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "UObject/ConstructorHelpers.h"
+#include "EngineUtils.h"				// For TActorIterator
+#include "Kismet/GameplayStatics.h"		// For GetAllActorsOfClass
 
 
 
@@ -20,6 +23,9 @@ const FName ArchigramStyleSetName = TEXT("ArchigramStyle");
 
 // Path to the BP_PCG Blueprint actor (adjust if your path is different)
 const TCHAR* FArchigramModule::PCGActorBlueprintPath = TEXT("/Archigram/Blueprints/BP_PCG.BP_PCG_C");
+
+// Folder name in World Outliner for Archigram actors
+const FName ArchigramOutlinerFolderName = FName(TEXT("Archigram"));
 
 // Static member to track the spawned PCG actor
 // TWeakObjectPtr automatically becomes invalid when the actor is deleted/garbage collected
@@ -45,10 +51,16 @@ void FArchigramModule::StartupModule()
 			FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FArchigramModule::RegisterToolbarButton)
 		);
 	}
+
+	// Bind to map opened event to handle level changes
+	FEditorDelegates::OnMapOpened.AddRaw(this, &FArchigramModule::OnMapOpened);
 }
 
 void FArchigramModule::ShutdownModule()
 {
+	// Unbind from map opened event
+	FEditorDelegates::OnMapOpened.RemoveAll(this);
+
 	// Clean up menu registrations
 	if (UToolMenus::IsToolMenuUIEnabled())
 	{
@@ -58,6 +70,9 @@ void FArchigramModule::ShutdownModule()
 
 	// Unregister custom style
 	UnregisterStyleSet();
+
+	// Clear the PCG actor reference
+	ClearSpawnedPCGActorReference();
 }
 
 void FArchigramModule::RegisterStyleSet()
@@ -288,8 +303,11 @@ AActor* FArchigramModule::SpawnPCGActor(FVector Location)
 		// Store the weak reference to track this actor
 		SpawnedPCGActor = NewActor;
 
-		UE_LOG(LogTemp, Log, TEXT("Archigram: Successfully spawned %s at location (%f, %f, %f)"), 
-			*NewActor->GetName(), Location.X, Location.Y, Location.Z);
+		// Place the actor in the "Archigram" folder in World Outliner
+		NewActor->SetFolderPath(ArchigramOutlinerFolderName);
+
+		UE_LOG(LogTemp, Log, TEXT("Archigram: Successfully spawned %s at location (%f, %f, %f) in folder '%s'"), 
+			*NewActor->GetName(), Location.X, Location.Y, Location.Z, *ArchigramOutlinerFolderName.ToString());
 		
 		// Select the newly spawned actor in the editor
 		if (GEditor)
@@ -324,6 +342,87 @@ void FArchigramModule::ClearSpawnedPCGActorReference()
 {
 	SpawnedPCGActor.Reset();
 	UE_LOG(LogTemp, Log, TEXT("Archigram: Cleared PCG Actor reference"));
+}
+
+void FArchigramModule::OnMapOpened(const FString& Filename, bool bAsTemplate)
+{
+	UE_LOG(LogTemp, Log, TEXT("Archigram: Map opened - %s"), *Filename);
+
+	// Clear the current reference (it points to an actor in the old level)
+	ClearSpawnedPCGActorReference();
+
+	// Search for existing PCG actor in the newly opened level
+	AActor* ExistingActor = FindExistingPCGActorInLevel();
+
+	if (ExistingActor)
+	{
+		SpawnedPCGActor = ExistingActor;
+		
+		// Ensure the actor is in the Archigram folder
+		if (ExistingActor->GetFolderPath() != ArchigramOutlinerFolderName)
+		{
+			ExistingActor->SetFolderPath(ArchigramOutlinerFolderName);
+			UE_LOG(LogTemp, Log, TEXT("Archigram: Moved existing PCG Actor to 'Archigram' folder"));
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("Archigram: Found existing PCG Actor in level: %s"), *ExistingActor->GetName());
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan,
+				FString::Printf(TEXT("Archigram: Found existing PCG Actor: %s"), *ExistingActor->GetName()));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Archigram: No existing PCG Actor found in level"));
+	}
+}
+
+AActor* FArchigramModule::FindExistingPCGActorInLevel()
+{
+	// Get the editor world
+	UWorld* World = nullptr;
+
+	if (GEditor)
+	{
+		World = GEditor->GetEditorWorldContext().World();
+	}
+
+	if (!World)
+	{
+		return nullptr;
+	}
+
+	// Load the Blueprint class to check against
+	UClass* PCGActorClass = LoadClass<AActor>(nullptr, PCGActorBlueprintPath);
+
+	if (!PCGActorClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Archigram: Could not load PCG Actor class for search"));
+		return nullptr;
+	}
+
+	// Search for actors of this class in the world
+	for (TActorIterator<AActor> It(World); It; ++It)
+	{
+		AActor* Actor = *It;
+		if (Actor && Actor->GetClass() == PCGActorClass)
+		{
+			// Found a matching actor
+			return Actor;
+		}
+	}
+
+	// Alternative: Use GetAllActorsOfClass (slightly less efficient but clearer)
+	// TArray<AActor*> FoundActors;
+	// UGameplayStatics::GetAllActorsOfClass(World, PCGActorClass, FoundActors);
+	// if (FoundActors.Num() > 0)
+	// {
+	//     return FoundActors[0];
+	// }
+
+	return nullptr;
 }
 
 void FArchigramModule::SetHDAMeshCollisionTypeToDefault(const FName& PackageName, EPackageFlags PackageFlags, const FString& PackageFileName, const FString& AssetPackageName)
