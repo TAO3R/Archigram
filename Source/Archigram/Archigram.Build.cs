@@ -40,6 +40,7 @@ public class Archigram : ModuleRules
 				"LevelEditor",		// For main menu bar access
 				"Projects",			// For getting plugin paths (icons)
 				"EditorStyle",		// For editor styling
+				"PCG",				// For triggering PCG generation on spawn
 				// ... add private dependencies that you statically link with here ...
 			}
 		);

@@ -6,6 +6,7 @@
 #include "Modules/ModuleManager.h"
 #include "Styling/SlateStyle.h"
 #include "UObject/WeakObjectPtrTemplates.h"
+#include "PCGComponent.h"
 
 class FArchigramModule : public IModuleInterface
 {

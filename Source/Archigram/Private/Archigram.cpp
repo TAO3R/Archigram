@@ -95,7 +95,7 @@ void FArchigramModule::RegisterStyleSet()
 	StyleSet->Set(
 		"Archigram.ToolbarIcon",
 		new FSlateImageBrush(
-			ResourcesDir / TEXT("Derek.png"),  // Use your icon file
+			ResourcesDir / TEXT("Derek_2.png"),  // Use your icon file
 			IconSize
 		)
 	);
@@ -104,7 +104,7 @@ void FArchigramModule::RegisterStyleSet()
 	StyleSet->Set(
 		"Archigram.ToolbarIcon.Small",
 		new FSlateImageBrush(
-			ResourcesDir / TEXT("Derek.png"),  // Same file, different size
+			ResourcesDir / TEXT("Derek_2.png"),  // Same file, different size
 			SmallIconSize
 		)
 	);
@@ -205,7 +205,7 @@ void FArchigramModule::RegisterToolbarButton()
 			"ArchigramToolbarButton",											// Internal name
 			FUIAction(FExecuteAction::CreateStatic(&FArchigramModule::ExecuteToolbarAction)),
 			LOCTEXT("ArchigramToolbarButton", "Archigram"),						// Label
-			LOCTEXT("ArchigramToolbarButtonTooltip", "Execute Archigram action and output to log"),	// Tooltip
+			LOCTEXT("ArchigramToolbarButtonTooltip", "Execute Archigram action"),	// Tooltip
 			FSlateIcon(ArchigramStyleSetName, "Archigram.ToolbarIcon", "Archigram.ToolbarIcon.Small")	// Icon from our style set
 		)
 	);
@@ -306,6 +306,16 @@ AActor* FArchigramModule::SpawnPCGActor(FVector Location)
 		// Place the actor in the "Archigram" folder in World Outliner
 		NewActor->SetFolderPath(ArchigramOutlinerFolderName);
 
+		if (UPCGComponent* PCGComp = NewActor->FindComponentByClass<UPCGComponent>())
+		{
+			PCGComp->Generate();
+			UE_LOG(LogTemp, Log, TEXT("Archigram: Triggered PCG generation for %s"), *NewActor->GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Archigram: No PCG component found on %s"), *NewActor->GetName());
+		}
+
 		UE_LOG(LogTemp, Log, TEXT("Archigram: Successfully spawned %s at location (%f, %f, %f) in folder '%s'"), 
 			*NewActor->GetName(), Location.X, Location.Y, Location.Z, *ArchigramOutlinerFolderName.ToString());
 		
@@ -322,7 +332,7 @@ AActor* FArchigramModule::SpawnPCGActor(FVector Location)
 	}
 
 	return NewActor;
-}
+}	// end of SpawnPCGActor
 
 AActor* FArchigramModule::GetSpawnedPCGActor()
 {
